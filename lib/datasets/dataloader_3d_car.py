@@ -112,14 +112,19 @@ class Car3D(WAD_CVPR2018):
             im_list = os.listdir(im_dir)
             self.train_list_all = [x[:-4] for x in im_list]
         else:
-            train_list_all = [line.rstrip('\n')[:-4] for line in open(os.path.join(self.data_dir, 'split',  list_flag + '.txt'))]
+            fpath = os.path.join(self.data_dir, 'split', 'train-list.txt')
+            with open(fpath, 'r') as f:
+                train_list_all = [line.rstrip('\n')[:-4] for line in f]
+
             valid_list_all = []
             if with_valid:
-                valid_list_all = [line.rstrip('\n')[:-4] for line in open(os.path.join(self.data_dir, 'split', 'val.txt'))]
+                fpath = os.path.join(self.data_dir, 'split', 'validation-list.txt')
+                with open(fpath, 'r') as f:
+                    valid_list_all = [line.rstrip('\n')[:-4] for line in f]
 
             # The Following list of images are noisy images that should be deleted:
-            train_list_delete = [line.rstrip('\n') for line in open(os.path.join(self.data_dir, 'split',  'Mesh_overlay_train_error _delete.txt'))]
-            val_list_delete = [line.rstrip('\n') for line in open(os.path.join(self.data_dir, 'split',  'Mesh_overlay_val_error_delete.txt'))]
+            train_list_delete = ['ID_1a5a10365', 'ID_4d238ae90', 'ID_408f58e9f', 'ID_bb1d991f6', 'ID_c44983aeb']
+            val_list_delete = []
             noisy_list = train_list_delete + val_list_delete
             print("Train delete %d images, val delete %d images." % (len(train_list_delete), len(val_list_delete)))
 
@@ -132,12 +137,22 @@ class Car3D(WAD_CVPR2018):
         self.car_models = OrderedDict([])
         logging.info('loading %d car models' % len(car_models.models))
         for model in car_models.models:
-            car_model = os.path.join(self.data_dir, 'car_models', model.name+'.pkl')
+            #car_model = os.path.join(self.data_dir, 'car_models', model.name+'.pkl')
             # with open(car_model) as f:
             #     self.car_models[model.name] = pkl.load(f)
             #
             # This is a python 3 compatibility
-            self.car_models[model.name] = pkl.load(open(car_model, "rb"), encoding='latin1')
+            #self.car_models[model.name] = pkl.load(open(car_model, "rb"), encoding='latin1')
+            car_model_fpath = os.path.join(self.data_dir, 'car_models_json', model.name+'.json')
+            f = open(car_model_fpath, 'r')
+            data = f.read()
+            f.close()
+
+            car_model = json.loads(data)
+            car_model['vertices'] = np.array(car_model['vertices'])
+            car_model['faces'] = np.array(car_model['faces'])
+            self.car_models[model.name] = car_model
+
             # fix the inconsistency between obj and pkl
             self.car_models[model.name]['vertices'][:, [0, 1]] *= -1
         return self.car_models

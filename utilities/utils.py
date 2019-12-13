@@ -130,25 +130,25 @@ def euler_angles_to_rotation_matrix(angle, is_dir=False):
         angle: [roll, pitch, yaw]
         is_dir: whether just use the 2d direction on a map
     """
-    roll, pitch, yaw = angle[0], angle[1], angle[2]
-
-    rollMatrix = np.matrix([
-        [1, 0, 0],
-        [0, math.cos(roll), -math.sin(roll)],
-        [0, math.sin(roll), math.cos(roll)]])
-
-    pitchMatrix = np.matrix([
-        [math.cos(pitch), 0, math.sin(pitch)],
-        [0, 1, 0],
-        [-math.sin(pitch), 0, math.cos(pitch)]])
+    yaw, pitch, roll = angle[0], angle[1], angle[2]
 
     yawMatrix = np.matrix([
-        [math.cos(yaw), -math.sin(yaw), 0],
-        [math.sin(yaw), math.cos(yaw), 0],
+        [math.cos(yaw), 0, math.sin(yaw)],
+        [0, 1, 0],
+        [-math.sin(yaw), 0, math.cos(yaw)]])
+
+    pitchMatrix = np.matrix([
+        [1, 0, 0],
+        [0, math.cos(pitch), -math.sin(pitch)],
+        [0, math.sin(pitch), math.cos(pitch)]])
+
+    rollMatrix = np.matrix([
+        [math.cos(roll), -math.sin(roll), 0],
+        [math.sin(roll), math.cos(roll), 0],
         [0, 0, 1]])
 
-    R = yawMatrix * pitchMatrix * rollMatrix
-    R = np.array(R)
+    R = np.dot(yawMatrix, np.dot(pitchMatrix, rollMatrix))
+    R = np.array(R).T
 
     if is_dir:
         R = R[:, 2]

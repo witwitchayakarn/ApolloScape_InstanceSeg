@@ -61,6 +61,7 @@ from utilities.utils import rotation_matrix_to_euler_angles
 from PIL import Image
 import json
 import cv2
+from pyquaternion import Quaternion
 
 logger = logging.getLogger(__name__)
 
@@ -615,20 +616,29 @@ class JsonDataset(object):
             car = self.car_models[car_name]
             pose = np.array(car_pose['pose'])
 
+            # Fix for kaggle pku-autonomous-driving
+            yaw, pitch, roll = pose[:3]
+            yaw, pitch, roll = -pitch, -yaw, -roll
+            pose[:3] = yaw, pitch, roll
+
             # project 3D points to 2d image plane
             rot_mat = euler_angles_to_rotation_matrix(pose[:3])
             rvect, _ = cv2.Rodrigues(rot_mat)
             imgpts, jac = cv2.projectPoints(np.float32(car['vertices']), rvect, pose[3:], intrinsic_mat, distCoeffs=None)
-
             imgpts = np.int32(imgpts).reshape(-1, 2)
 
             x1, y1, x2, y2 = imgpts[:, 0].min(), imgpts[:, 1].min(), imgpts[:, 0].max(), imgpts[:, 1].max()
             x1, y1, x2, y2 = box_utils.clip_xyxy_to_image(x1, y1, x2, y2, entry['height'], entry['width'])
             # Require non-zero seg area and more than 1x1 box size\
-            obj = {'area': car_pose['area'], 'clean_bbox': [x1, y1, x2, y2], 'category_id': 33,
-                   'car_id': car_pose['car_id'], 'visible_rate': car_pose['visible_rate'],
-                   'pose': car_pose['pose']}
-
+            obj = {
+                'area': car_pose['area'],
+                'clean_bbox': [x1, y1, x2, y2],
+                'category_id': 33,
+                'car_id': car_pose['car_id'],
+                'visible_rate': car_pose['visible_rate'],
+                'pose': pose,
+                'rot_mat': rot_mat
+            }
             valid_objs.append(obj)
 
         num_valid_objs = len(valid_objs)
@@ -644,7 +654,6 @@ class JsonDataset(object):
         visible_rate = np.zeros((num_valid_objs), dtype=np.float32)
         poses = np.zeros((num_valid_objs, 6), dtype=np.float32)
         quaternions = np.zeros((num_valid_objs, 4), dtype=np.float32)
-
         car_cat_classes = np.zeros((num_valid_objs), dtype=np.int32)
 
         for ix, obj in enumerate(valid_objs):
@@ -657,7 +666,9 @@ class JsonDataset(object):
             gt_overlaps[ix, car_class] = 1.0
             visible_rate[ix] = obj['visible_rate']
             poses[ix] = obj['pose']
-            quaternions[ix] = euler_angles_to_quaternions(np.array([obj['pose'][:3]]))
+
+            #quaternions[ix] = euler_angles_to_quaternions(np.array([obj['pose'][:3]]))
+            quaternions[ix] = Quaternion(matrix=obj['rot_mat']).q
             # ensure the quaternion is upper hemispher
             quaternions[ix] = quaternion_upper_hemispher(quaternions[ix])
 

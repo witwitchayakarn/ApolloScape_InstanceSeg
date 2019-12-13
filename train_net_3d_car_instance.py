@@ -1,7 +1,7 @@
 import argparse
 import os
 #os.environ['CUDA_VISIBLE_DEVICES'] = '1, 2, 3'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+#os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 import sys
 import pickle
@@ -12,6 +12,7 @@ from collections import defaultdict
 
 import yaml
 import torch
+#torch.multiprocessing.set_sharing_strategy('file_system')
 from torch.autograd import Variable
 import cv2
 
@@ -119,7 +120,7 @@ def main():
         cfg.MODEL.NUMBER_CARS = 34
     cfg.TRAIN.MIN_AREA = 196   # 14*14
     cfg.TRAIN.USE_FLIPPED = False  # Currently I don't know how to handle the flipped case
-    cfg.TRAIN.IMS_PER_BATCH = 1
+    #cfg.TRAIN.IMS_PER_BATCH = 1
 
     cfg.NUM_GPUS = torch.cuda.device_count()
     effective_batch_size = cfg.TRAIN.IMS_PER_BATCH * cfg.NUM_GPUS * args.iter_size

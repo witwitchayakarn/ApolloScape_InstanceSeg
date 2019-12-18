@@ -67,8 +67,9 @@ def _get_image_blob(roidb):
         im = cv2.imread(roidb[i]['image'])
         assert im is not None, 'Failed to read image \'{}\''.format(roidb[i]['image'])
         if cfg.TRAIN.IGNORE_MASK:
-            cv2.imread(roidb[i]['image'])
             im_ig = cv2.imread(roidb[i]['image'].replace('images', 'ignore_mask'))
+            if im_ig is None:
+                im_ig = np.zeros(im.shape, dtype='uint8')
         # If NOT using opencv to read in images, uncomment following lines
         # if len(im.shape) == 2:
         #     im = im[:, :, np.newaxis]

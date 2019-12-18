@@ -10,6 +10,7 @@ import math
 import matplotlib.pyplot as plt
 import matplotlib.pylab as pylab
 
+from pyquaternion import Quaternion
 
 def euler_angles_to_quaternions(angle):
     """Convert euler angels to quaternions representation.
@@ -83,21 +84,9 @@ def quaternion_to_euler_angle(q):
     Output:
         angle: 1 x 3 vector, each row is [roll, pitch, yaw]
     """
-    w, x, y, z = q
-    t0 = +2.0 * (w * x + y * z)
-    t1 = +1.0 - 2.0 * (x * x + y * y)
-    X = math.atan2(t0, t1)
+    yaw, pitch, roll = Quaternion(q).yaw_pitch_roll
 
-    t2 = +2.0 * (w * y - z * x)
-    t2 = +1.0 if t2 > +1.0 else t2
-    t2 = -1.0 if t2 < -1.0 else t2
-    Y = math.asin(t2)
-
-    t3 = +2.0 * (w * z + x * y)
-    t4 = +1.0 - 2.0 * (y * y + z * z)
-    Z = math.atan2(t3, t4)
-
-    return X, Y, Z
+    return roll, pitch, yaw
 
 
 def intrinsic_vec_to_mat(intrinsic, shape=None):

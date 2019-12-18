@@ -631,11 +631,11 @@ class JsonDataset(object):
             x1, y1, x2, y2 = box_utils.clip_xyxy_to_image(x1, y1, x2, y2, entry['height'], entry['width'])
             # Require non-zero seg area and more than 1x1 box size\
             obj = {
-                'area': car_pose['area'],
+                'area': (x2-x1) * (y2-y1),
                 'clean_bbox': [x1, y1, x2, y2],
                 'category_id': 33,
                 'car_id': car_pose['car_id'],
-                'visible_rate': car_pose['visible_rate'],
+                'visible_rate': 1.0,
                 'pose': pose,
                 'rot_mat': rot_mat
             }

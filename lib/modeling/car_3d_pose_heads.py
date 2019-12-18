@@ -182,7 +182,7 @@ def bbox_transform_pytorch(rois, deltas, im_info, weights=(1.0, 1.0, 1.0, 1.0)):
 
     device_id = deltas.get_device()
     im_scale = im_info[0][-1]
-    im_scale_np = im_scale.numpy()
+    im_scale_np = im_scale.data.numpy()
     boxes = Variable(torch.from_numpy((rois[:, 1:]/im_scale_np).astype('float32'))).cuda(device_id)
     weights = Variable(torch.from_numpy(np.array(weights).astype('float32'))).cuda(device_id)
 
@@ -198,7 +198,7 @@ def bbox_transform_pytorch(rois, deltas, im_info, weights=(1.0, 1.0, 1.0, 1.0)):
     dh = deltas[:, 3::4] / wh
 
     # Prevent sending too large values into np.exp()
-    bb_xform_clip = torch.from_numpy(np.array(cfg.BBOX_XFORM_CLIP).astype('float32')).cuda(device_id)
+    bb_xform_clip = Variable(torch.from_numpy(np.array([cfg.BBOX_XFORM_CLIP]).astype('float32'))).cuda(device_id)
     dw = torch.min(dw, bb_xform_clip)
     dh = torch.min(dh, bb_xform_clip)
 
@@ -207,7 +207,7 @@ def bbox_transform_pytorch(rois, deltas, im_info, weights=(1.0, 1.0, 1.0, 1.0)):
     pred_w = torch.exp(dw) * widths[:, np.newaxis]
     pred_h = torch.exp(dh) * heights[:, np.newaxis]
 
-    pred_boxes = torch.zeros(deltas.shape, dtype=deltas.dtype)
+    pred_boxes = Variable(torch.zeros(deltas.shape)).cuda(device_id)
 
     # # x1
     pred_boxes[:, 0::4] = pred_ctr_x
@@ -220,13 +220,14 @@ def bbox_transform_pytorch(rois, deltas, im_info, weights=(1.0, 1.0, 1.0, 1.0)):
 
     if cfg.TRANS_HEAD.IPUT_NORM_BY_INTRINSIC:
         intrinsic_vect = np.array(cfg.TRANS_HEAD.CAMERA_INTRINSIC)
-        pred_boxes[:, 0::4] -= intrinsic_vect[2]
-        pred_boxes[:, 0::4] /= intrinsic_vect[0]
-        pred_boxes[:, 1::4] -= intrinsic_vect[3]
-        pred_boxes[:, 1::4] /= intrinsic_vect[1]
+        #intrinsic_vect = Variable(torch.from_numpy(np.array(cfg.TRANS_HEAD.CAMERA_INTRINSIC).astype('float32'))).cuda(device_id)
+        pred_boxes[:, 0::4] = pred_boxes[:, 0::4] - intrinsic_vect[2]
+        pred_boxes[:, 0::4] = pred_boxes[:, 0::4] / intrinsic_vect[0]
+        pred_boxes[:, 1::4] = pred_boxes[:, 1::4] - intrinsic_vect[3]
+        pred_boxes[:, 1::4] = pred_boxes[:, 1::4] / intrinsic_vect[1]
 
-        pred_boxes[:, 2::4] /= intrinsic_vect[0]
-        pred_boxes[:, 3::4] /= intrinsic_vect[1]
+        pred_boxes[:, 2::4] = pred_boxes[:, 2::4] / intrinsic_vect[0]
+        pred_boxes[:, 3::4] = pred_boxes[:, 3::4] / intrinsic_vect[1]
     else:
         im_shape = im_info[0][:2]
         car_shape = (120, 120)
@@ -240,7 +241,6 @@ def bbox_transform_pytorch(rois, deltas, im_info, weights=(1.0, 1.0, 1.0, 1.0)):
         pred_boxes[:, 3::4] -= (car_shape[1]/2)
         pred_boxes[:, 3::4] /= car_shape[1]
 
-    pred_boxes = pred_boxes.cuda(device_id)
     return pred_boxes
 
 

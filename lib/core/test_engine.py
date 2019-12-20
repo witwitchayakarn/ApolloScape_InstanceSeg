@@ -463,6 +463,8 @@ def test_net_Car3D(
             im = cv2.imread(entry['image'])
             ignored_mask_img = os.path.join(('/').join(entry['image'].split('/')[:-2]), 'ignore_mask', entry['image'].split('/')[-1])
             ignored_mask = cv2.imread(ignored_mask_img, cv2.IMREAD_GRAYSCALE)
+            if ignored_mask is None:
+                ignored_mask = np.zeros(im.shape, dtype='uint8')
             ignored_mask_binary = np.zeros(ignored_mask.shape)
             ignored_mask_binary[ignored_mask > 250] = 1
             if cfg.MODEL.NON_LOCAL_TEST and not cfg.TEST.BBOX_AUG.ENABLED:

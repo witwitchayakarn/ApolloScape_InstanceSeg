@@ -319,6 +319,7 @@ def main():
         step = args.start_step
         for step in range(args.start_step, cfg.SOLVER.MAX_ITER):
             # Warm up
+            warmup_factor_trans = 1.0
             if step < cfg.SOLVER.WARM_UP_ITERS:
                 method = cfg.SOLVER.WARM_UP_METHOD
                 if method == 'constant':

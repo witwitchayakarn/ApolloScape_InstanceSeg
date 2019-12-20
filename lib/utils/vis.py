@@ -496,9 +496,9 @@ def write_pose_to_json(im_name, output_dir, boxes, car_cls_prob, euler_angle, tr
 
     if isinstance(boxes, list):
         boxes, segms, keypoints, classes = convert_from_cls_format(boxes, segms)
-    car_cls = np.argmax(car_cls_prob, axis=1)
     if boxes is None or boxes.shape[0] == 0 or max(boxes[:, 4]) < thresh:
         return
+    car_cls = np.argmax(car_cls_prob, axis=1)
 
     if segms is not None:
         masks = mask_util.decode(segms)

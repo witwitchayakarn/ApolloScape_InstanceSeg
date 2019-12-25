@@ -24,7 +24,7 @@ def get_minibatch_blob_names(is_training=True):
     return blob_names
 
 
-def get_minibatch(roidb, valid_keys):
+def get_minibatch(roidb, transform, valid_keys):
     """Given a roidb, construct a minibatch sampled from it."""
     # We collect blobs from each image onto a list and then concat them into a
     # single tensor, hence we initialize each blob to an empty list
@@ -32,7 +32,7 @@ def get_minibatch(roidb, valid_keys):
 
     # Get the input image blob
     if cfg.TRAIN.IGNORE_MASK:
-        im_blob, im_ig_blob, im_scales = _get_image_blob(roidb)
+        im_blob, im_ig_blob, im_scales = _get_image_blob(roidb, transform)
         blobs['im_ig_blob'] = im_ig_blob
     else:
         im_blob, im_scales = _get_image_blob(roidb)
@@ -48,7 +48,7 @@ def get_minibatch(roidb, valid_keys):
     return blobs, valid
 
 
-def _get_image_blob(roidb):
+def _get_image_blob(roidb, transform):
     """Builds an input blob from the images in the roidb at the specified
     scales.
     """
@@ -81,6 +81,8 @@ def _get_image_blob(roidb):
             im = im[:, ::-1, :]
             if cfg.TRAIN.IGNORE_MASK:
                 im_ig = im_ig[:, ::-1]
+
+        im = transform(im, None)[0]
 
         #target_size = cfg.TRAIN.SCALES[scale_inds[i]]
         im, im_scale = blob_utils.prep_im_for_blob(im, cfg.PIXEL_MEANS, [target_size], cfg.TRAIN.MAX_SIZE)

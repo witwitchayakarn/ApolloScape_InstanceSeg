@@ -12,6 +12,7 @@ import utils.blob as blob_utils
 from core.config import cfg
 from roi_data.minibatch import get_minibatch
 
+from utils.transform import RandomTransformPixels
 
 class RoiDataLoader(data.Dataset):
     def __init__(self, roidb, num_classes, training=True, valid_keys=[]):
@@ -26,11 +27,12 @@ class RoiDataLoader(data.Dataset):
         self.training = training
         self.DATA_SIZE = len(self._roidb)
         self.valid_keys = valid_keys
+        self.transform = RandomTransformPixels()
 
     def __getitem__(self, index_tuple):
         index, ratio = index_tuple
         single_db = [self._roidb[index]]
-        blobs, valid = get_minibatch(single_db, self.valid_keys)
+        blobs, valid = get_minibatch(single_db, self.transform, self.valid_keys)
         # TODO: Check if minibatch is valid ? If not, abandon it.
         # Need to change _worker_loop in torch.utils.data.dataloader.py.
 

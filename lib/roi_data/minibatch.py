@@ -82,7 +82,13 @@ def _get_image_blob(roidb, transform):
             if cfg.TRAIN.IGNORE_MASK:
                 im_ig = im_ig[:, ::-1]
 
-        im = transform(im, None)[0]
+        im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        try:
+            im_tran = np.array(transform(image=im_rgb, target=None)[0])
+        except TypeError:
+            print(f"Error in Albumentations: {roidb[i]['image']}")
+            im_tran = im_rgb
+        im = cv2.cvtColor(im_tran, cv2.COLOR_RGB2BGR)
 
         #target_size = cfg.TRAIN.SCALES[scale_inds[i]]
         im, im_scale = blob_utils.prep_im_for_blob(im, cfg.PIXEL_MEANS, [target_size], cfg.TRAIN.MAX_SIZE)

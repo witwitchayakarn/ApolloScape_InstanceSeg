@@ -12,7 +12,7 @@ import utils.blob as blob_utils
 from core.config import cfg
 from roi_data.minibatch import get_minibatch
 
-from utils.transform import RandomTransformPixels
+from utils.transforms import RandomTransformPixels
 
 class RoiDataLoader(data.Dataset):
     def __init__(self, roidb, num_classes, training=True, valid_keys=[]):

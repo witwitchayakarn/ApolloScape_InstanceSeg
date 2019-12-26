@@ -27,7 +27,13 @@ class RoiDataLoader(data.Dataset):
         self.training = training
         self.DATA_SIZE = len(self._roidb)
         self.valid_keys = valid_keys
-        self.transform = RandomTransformPixels()
+
+        if self.training:
+            self.transform = RandomTransformPixels()
+        else:
+            def dummy(image, target):
+                return image, target
+            self.transform = dummy
 
     def __getitem__(self, index_tuple):
         index, ratio = index_tuple

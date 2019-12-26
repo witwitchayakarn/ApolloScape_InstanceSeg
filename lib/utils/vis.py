@@ -519,6 +519,7 @@ def write_pose_to_json(im_name, output_dir, boxes, car_cls_prob, euler_angle, tr
 
         # car_cls
         car_cls_i = car_cls[i]
+        box_i = boxes[i, :-1]
         euler_angle_i = euler_angle[i]
         trans_pred_i = trans_pred[i]
         car_model_i = dataset.unique_car_models[car_cls_i]
@@ -527,6 +528,7 @@ def write_pose_to_json(im_name, output_dir, boxes, car_cls_prob, euler_angle, tr
             # filter out by ignored_mask_binary
             car_info = dict()
             car_info["car_id"] = int(car_model_i)
+            car_info["box"] = [round(x) for x in box_i]
             car_info["pose"] = [float(x) for x in euler_angle_i] + [float(x) for x in trans_pred_i]
             # We use rectangle area
             car_info["area"] = int(areas[i])
